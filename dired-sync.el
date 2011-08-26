@@ -148,6 +148,18 @@ tunneled remote hosts."
   :type 'integer
   :group 'dired-sync)
 
+(defcustom dired-sync-source nil
+  "Last used source. Maybe pre set. Using for dired-do-sync-pull
+and dired-do-sync-push."
+  :type 'string
+  :group 'dired-sync)
+
+(defcustom dired-sync-destination nil
+  "Last used destination. Maybe pre set. Using for
+dired-do-sync-pull and dired-do-sync-push."
+  :type 'string
+  :group 'dired-sync)
+
 (defcustom dired-sync-commands
   '(:get-user-local
     (lambda (src dst) "id -un")
@@ -487,7 +499,7 @@ SOURCE."
 
 
 ;;;###autoload
-(defun dired-do-sync (&optional source destination)
+(defun dired-do-sync (&optional source destination is-push-or-pull)
   "Synchronize 2 directories using commands defined in
 `dired-sync-commands'."
   (interactive)
@@ -495,6 +507,9 @@ SOURCE."
 	 (src (plist-get files :src))
 	 (dst (plist-get files :dst))
 	 item clist cmd1 cmd2 )
+    (unless is-push-or-pull
+      (setq dired-sync-source (plist-get src :file))
+      (setq dired-sync-destination (plist-get dst :file)))
     (dired-sync-with-files
      src dst
      (cond
@@ -542,7 +557,23 @@ SOURCE."
 	 (set-process-sentinel p2 'dired-sync-proc-sentinel)))
      
      t)))
-
+
+(defun dired-do-sync-pull ()
+  "Sync data with from last destination to last source."
+  (interactive)
+  (if (and dired-sync-source dired-sync-destination)
+      (let* ((place (string-match "[^/]+$" dired-sync-source))
+             (src (substring dired-sync-source 0 (1- place)))
+             (dst (concat dired-sync-destination "/" (substring dired-sync-source place))))
+        (dired-do-sync dst src 'T))
+    (message "Please, use dired-do-sync first.")))
+
+(defun dired-do-sync-push ()
+  "Sync data with from last source to last destination."
+  (interactive)
+  (if (and dired-sync-source dired-sync-destination)
+      (dired-do-sync dired-sync-source dired-sync-destination 'T)
+    (message "Please, use dired-do-sync first.")))
 
 (defun dired-sync-proc-sentinel (proc change)
   (when (eq (process-status proc) 'exit)
