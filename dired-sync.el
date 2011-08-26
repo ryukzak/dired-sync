@@ -125,7 +125,7 @@
  
 ;;; Code:
 
-(defconst dired-sync-version "0.1"
+(defconst dired-sync-version "0.2"
   "The version number of dired-sync.")
 
 ;;;###autoload
