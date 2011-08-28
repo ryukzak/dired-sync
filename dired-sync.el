@@ -565,6 +565,7 @@ SOURCE."
       (let* ((place (string-match "[^/]+$" dired-sync-source))
              (src (substring dired-sync-source 0 (1- place)))
              (dst (concat dired-sync-destination "/" (substring dired-sync-source place))))
+        (save-some-buffers)
         (dired-do-sync dst src 'T))
     (message "Please, use dired-do-sync first.")))
 
@@ -572,7 +573,8 @@ SOURCE."
   "Sync data with from last source to last destination."
   (interactive)
   (if (and dired-sync-source dired-sync-destination)
-      (dired-do-sync dired-sync-source dired-sync-destination 'T)
+      (progn (save-some-buffers)
+             (dired-do-sync dired-sync-source dired-sync-destination 'T))
     (message "Please, use dired-do-sync first.")))
 
 (defun dired-sync-proc-sentinel (proc change)
